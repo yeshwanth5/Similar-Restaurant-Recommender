@@ -1,0 +1,188 @@
+    
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background: #331D2C;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content {
+            background-color: #f6f6f6;
+            height: 1cm;
+            font-size: large;
+            border:0px;
+            border-radius: 5px;
+            font-style: italic;
+            font-weight: bold;
+        }
+
+        .button {
+            height: 1cm;
+            width: 2cm;
+            padding: 0px;
+            border:0px;
+            border-radius: 5px;
+            margin: 10px;
+            font-size: large;
+            font-style: italic;
+            font-weight: bold;
+            background-color: #FF8989;
+        }
+
+        .searchBlock {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .Header {
+            color: #ffffff;
+            font-size: 90px;
+            margin: 0%;
+            padding: 0%;
+            position: absolute;
+            top: 20%;
+        }
+
+        .SmallHeader {
+            color: #FF8989;
+            font-size: 30px;
+            position: absolute;
+            top:29%;
+            left:80%;
+        }
+        .responseContainer {
+            color: white;
+            width: fit-content;
+        }
+        .flex-container {
+            display: flex;
+            flex-direction: column; /* Stack items vertically */
+            position: absolute;
+            top: 60%;
+            left:39%;
+            align-items: center;
+        }
+
+        .flex-container div {
+            margin-top: 0.2cm;
+            font-size:x-large;
+            color: #FF8989;
+        }
+
+        #pizza {
+            position: absolute;
+            left: -40%;
+            top:10%;
+            width: 40cm;
+        }
+
+    </style>
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+        //Calls the post API to send the selected restaurant name and fetch similar restaurants
+        function getSimilarRestaurants() {
+            $(document).ready(function() {
+                var dropdown = document.getElementById('myDropdown');
+                var selectedOption = dropdown.options[dropdown.selectedIndex];
+                var selectedValue = selectedOption.value;
+                var formData = {
+                    restuarant_name : selectedValue
+                }
+                if(selectedValue!="")
+                {
+                    $.ajax({
+                        url: "http://127.0.0.1:5000/get_similar_restaurants",
+                        type: "POST",
+                        data: formData,
+                        success: function(response) {
+                            console.log("POST request successful!", response.similar_restaurants);
+                            var names = response.similar_restaurants;
+                            var respDivs = document.getElementById("response-divs");
+                            var childDivs = respDivs.querySelectorAll(".responseContainer");
+                            //Clear data from previous runs
+                            if(childDivs.length>0) {
+                                for (var i = 0; i < childDivs.length; i++) {
+                                    respDivs.removeChild(childDivs[i]);
+                                }
+                            }
+                            for(var i in names) {
+                                var div = document.createElement('div');
+                                div.classList.add("responseContainer");
+                                name = names[i].replace(",",", ");
+                                div.innerHTML=name;
+                                respDivs.appendChild(div);
+                            }
+                        },
+                        error: function(error) {
+                            console.error("Error making POST request:", error);
+                        }
+                    });
+                }
+            });
+        } 
+
+        // Calls the GET api to load data for the dropdown
+        function getNames() {
+            $(document).ready(function() {
+                $.ajax({
+                    url:"http://127.0.0.1:5000/get_restaurant_names",
+                    type:"GET",
+                    success:function(response) {
+                        console.log(response.restaurant_names);
+                        var names = response.restaurant_names;
+                        dropdown = document.getElementById("myDropdown");
+                        for(var i in names) { 
+                            var option = document.createElement('option');
+                            option.value = names[i];
+                            option.textContent=names[i];
+                            dropdown.appendChild(option);
+                        }
+                    },
+                    error:function(error) {
+                        console.log(error)
+                    }
+                })
+            })
+        } 
+        //Loads data when the window is loaded
+        window.onload = getNames;
+
+    </script>
+</head>
+
+
+
+
+
+
+
+
+<body>
+    <h1 class="Header">In the <span style="color:#FF8989 ;">mood</span> for similar dining adventures?</h1>
+    <h1 class="SmallHeader">in Bangalore?</h1>
+    <div class="searchBlock">
+        <select id="myDropdown" class="dropdown-content">
+          <option class="options" value="" disabled="disabled" selected="selected">Choose a restaurant and I'll find you few similiar ones.</option>
+        </select>
+        <button class="button" id="go" onclick="getSimilarRestaurants()">Go</button>
+      </div>
+    <div class="flex-container" id="response-divs"></div>
+    <img src="pizza.png" alt="Image description" id="pizza">
+
+</body>
+</html>
